@@ -12,19 +12,21 @@ Each Neo4j driver has a database object for creating a driver. To use a driver, 
 """
 
 def make_create(**kwargs):
+    return "CREATE (a:%(object)s {name:'%(name)s', title:'%(title)s'})" % kwargs
 
-  return "CREATE (a:%(object)s {name:'%(name)s', title:'%(title)s'})" % kwargs
-
-def make_match(**kwargs):
-
+def make_match_on_attrbiute(**kwargs):
     return "MATCH (a:%(object)s) WHERE a.title = '%(title)s' RETURN a.name AS name, a.title as title" % kwargs
 
-def run_query(query, session):
+def make_relationship():
+    return "MATCH (a:Person {name:'Bob'}), (r:Role {name:'GRA'}) CREATE (u)-[:HAS_ROLE]->(r)"
 
+def make_match_on_relationship():
+    return "MATCH (a {name: 'John'})-[:friend]->()-[:friend]->(fof) RETURN a.name, fof.name"
+
+def run_query(query, session):
     return session.run(query)
 
 def run_clear_db(session):
-
     return session.run("MATCH(n) OPTIONAL MATCH (n)-[r]-() DELETE n,r)")
 
 def main():
@@ -33,16 +35,19 @@ def main():
     driver = GraphDatabase.driver("bolt://localhost:7687", auth=basic_auth("neo4j", "tschebotarew"))
     session = driver.session()
 
-    q = make_create(object='Person', name='Arthur', title='King')
+    q = make_create(object='Person', name='Bob', title='King')
     r = run_query(q, session)
 
-    q = make_create(object='Person', name='Ralph', title='King')
+    q = make_create(object='Person', name='Eliakah', title='King')
     r = run_query(q, session)
 
-    q = make_match(object='Person', title='King')
+    q = make_relationship()
     r = run_query(q, session)
-    for record in r:
-      print("%s %s" % (record["title"], record["name"]))
+
+    # q = make_match_on_attrbiute(object='Person', title='King')
+    # r = run_query(q, session)
+    # for record in r:
+    #   print("{0} {1}".format(record["title"], record["name"]))
 
     session.close()
 
